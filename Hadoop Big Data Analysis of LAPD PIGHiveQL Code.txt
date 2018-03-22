@@ -1,0 +1,396 @@
+Hadoop Big Data Analysis for LAPD Activity
+
+      Scope of Data Set:
+This term project uses three data sets (Approx total file size:1.1GB) . The data sets are separately composed of vehicle and pedestrian stop data, arrest data, and crime data collected in Los Angeles from 2010 to present this month. The data sets were collected from government open data at the DataLA link and will include (1.482GB) : 
+https://data.lacity.org/browse?tags=lapd
+https://data.lacity.org/A-Safe-City/Vehicle-and-Pedestrian-Stop-Data-2010-to-Present/ci25-wgt7
+https://data.lacity.org/A-Safe-City/Arrest-Data-from-2010-to-Present/yru6-6re4
+https://data.lacity.org/A-Safe-City/Crime-Data-from-2010-to-Present/y8tr-7khq
+https://controllerdata.lacity.org/Statistics/Demographic-and-Economic-Statistics/9z75-k9sy
+https://data.lacity.org/dataset/2010-Census-Populations-by-Zip-Code/nxs9-385f
+https://controllerdata.lacity.org/Statistics/Economy-Panel-LA-Data/4ndk-mmc8
+
+In 2014, Mayor Eric Garcetti launched DataLA portal through the Office of the Mayor’s Data team led by Chief Data Officer Lilian Coral to make the city more livable and equitable to all Angelenos by providing high value open data. 
+
+The term project hopes to accomplish things in terms of public safety and  awareness, etc. Other topics are open transparency, accountability, address civic engagement, maximize public benefit, protect the public, ensure the integrity of services, and promote resilience.
+
+      Approaches:
+Through the data compiled in this term paper, we will possibly follow similar goals and approaches done by the DataLA directive using Apache Hadoop, Hive, and other HDFS ecosystem supporting software. 
+
+Term project will take many approaches for collection, joining, analysis, and visualization. For example, table collection, analysis, deliverables will be done through class models.
+
+Analysis of these datasets will be used for transforming the raw data into meaningful and crucial information which will help in discovering certain trends in Crime rate, Arrests and vehicles and/or pedestrians being stopped by the LA Police Department.
+
+
+
+
+
+
+
+
+
+--Begin Code
+--Load website log data and use file name to Hdfs
+--Understand ' . ' specifies to current/home directory 
+
+--Vehicle and Pedestrian Stops
+$ wget -O stops.csv https://data.lacity.org/api/views/ci25-wgt7/rows.csv?accessType=DOWNLOAD
+$ hdfs dfs -put stops.csv 
+$ hdfs dfs -ls
+
+--Arrests
+$ wget -O arrests.csv https://data.lacity.org/api/views/yru6-6re4/rows.csv?accessType=DOWNLOAD
+$ hdfs dfs -put arrests.csv
+$ hdfs dfs -ls
+
+--Crimes
+$ wget -O crimes.csv https://data.lacity.org/api/views/y8tr-7khq/rows.csv?accessType=DOWNLOAD
+$ hdfs dfs -put crimes.csv .
+$ hdfs dfs -ls
+
+—-Demographic and Economic Statistics
+$ wget -O demo.csv https://controllerdata.lacity.org/api/views/9z75-k9sy/rows.csv?accessType=DOWNLOAD
+$ hdfs dfs -put demo.csv .
+$ hdfs dfs -ls
+
+-—2010 Census
+$ wget -O census.csv https://data.lacity.org/api/views/nxs9-385f/rows.csv?accessType=DOWNLOAD
+$ hdfs dfs -put census.csv .
+$ hdfs dfs -ls
+
+—-Economy Panel
+$ wget -O econ.csv https://controllerdata.lacity.org/api/views/4ndk-mmc8/rows.csv?accessType=DOWNLOAD
+$ hdfs dfs -put econ.csv .
+$ hdfs dfs -ls
+
+--Execute PigQL
+$ pig
+
+--LOAD and then STORE stops
+grunt> stops = LOAD '/user/actejas/stops.csv' USING PigStorage(',') AS (stop_number:chararray,ref_number:chararray,sex:chararray,descent:chararray,descent_desc:chararray,stop_date:chararray,stop_time:chararray,off1_number:chararray,off1_divnum:chararray,div1_desc:chararray,off2_number:chararray,off2_divnum:chararray,div2_desc:chararray,report_dist:chararray,stop_type:chararray,post_stop_activity:chararray);
+grunt> a = LIMIT stops 5;
+grunt> dump a;
+grunt> STORE stops INTO 'PROJECT/STOPS';
+
+--LOAD and then STORE arrests
+grunt> arrests = LOAD '/user/actejas/arrests.csv' USING PigStorage(',') AS (report_id:chararray,arrests_date:chararray,arrests_time:chararray,area_id:chararray,area_name:chararray,reporting_dist:chararray,age:chararray,sex:chararray,descent_code:chararray,charge_group_code:chararray,charge_group_desc:chararray,arrest_type:chararray,charge:chararray,charge_decs:chararray,address:chararray,cross_street:chararray,location:chararray);
+grunt> a = LIMIT arrests 5;
+grunt> dump a;
+grunt> STORE arrests INTO 'PROJECT/ARREST';
+
+--LOAD and then STORE crimes
+crimes = LOAD '/user/actejas/crimes.csv' USING PigStorage(',') AS (dr_number:chararray,crimes_date_reported:chararray,crimes_date:chararray,crimes_time:chararray,area_id:chararray,area_name:chararray,reporting_disct:chararray,crime_code:chararray,mo_code:chararray,victim_age:chararray,victim_sex:chararray,victim_descent:chararray,premise_code:chararray,premise_desc:chararray,weapon_code:chararray,weapon_desc:chararray,status_code:chararray,status_desc:chararray,crime_code1:chararray,crime_code2:chararray,crime_code3:chararray,crime_code4:chararray,address:chararray,cross_street:chararray,location:chararray);
+grunt> STORE crimes INTO 'PROJECT/CRIMES';
+
+
+
+--LOAD and then STORE demo
+grunt> demo = LOAD '/user/actejas/demo.csv' USING PigStorage(',') AS (fiscal_year:chararray,estimated_population:chararray,income_in_thousands:chararray,income_per_capita:chararray,median_age:chararray,public_school_enrollment:chararray,unemployment_rate:chararray);
+grunt> STORE demo INTO 'PROJECT/DEMO';
+
+--LOAD and then STORE census
+grunt> census = LOAD '/user/actejas/census.csv' USING PigStorage(',') AS (zip_code:chararray,population:chararray,median_age:chararray,total_males:chararray,total_females:chararray,total_households:chararray,avg_household_size:chararray);
+grunt> STORE census INTO 'PROJECT/CENSUS';
+
+--LOAD and then STORE econ
+grunt> econ = LOAD '/user/actejas/econ.csv' USING PigStorage(',') AS (category:chararray,indicator:chararray,sub_indicator:chararray,locality:chararray,gender:chararray,council_district:chararray,fiscal_year:chararray,fy_qtr:chararray,calender_year:chararray,cy_qtr:chararray,quarter_start:chararray,as_of_date:chararray,unit_of_measure:chararray,unit_text:chararray,value:chararray,source:chararray);
+grunt> STORE econ INTO 'PROJECT/ECON';
+
+1> --Which victim profile is most and least affected by LAPD stops?
+grunt> a = GROUP stops by (descent);
+grunt> b = FOREACH a GENERATE FLATTEN(group) as (descent), COUNT($1);
+grunt> dump b;
+
+--Which reporting district is most and least affected by LAPD stops?	
+grunt> a = GROUP stops by report_dist;
+grunt> b = FOREACH a GENERATE FLATTEN(group) as (report_dist), COUNT($1);
+grunt> c = ORDER b BY $1 DESC;
+grunt> d = LIMIT c 5;
+grunt> dump d;
+
+
+-- which year has the most and least crime activity;
+crimes = LOAD '/user/actejas/crimes.csv' USING PigStorage(',') AS (dr_number:chararray,crimes_date_reported:chararray,crimes_date:chararray,crimes_time:chararray,area_id:chararray,area_name:chararray,reporting_disct:chararray,crime_code:chararray,mo_code:chararray,victim_age:chararray,victim_sex:chararray,victim_descent:chararray,premise_code:chararray,premise_desc:chararray,weapon_code:chararray,weapon_desc:chararray,status_code:chararray,status_desc:chararray,crime_code1:chararray,crime_code2:chararray,crime_code3:chararray,crime_code4:chararray,address:chararray,cross_street:chararray,location:chararray);
+
+a = STREAM crimes THROUGH `tail -n +2` AS (dr_number:chararray,crimes_date_reported:chararray,crimes_date:chararray,crimes_time:chararray,area_id:chararray,area_name:chararray,reporting_disct:chararray,crime_code:chararray,mo_code:chararray,victim_age:chararray,victim_sex:chararray,victim_descent:chararray,premise_code:chararray,premise_desc:chararray,weapon_code:chararray,weapon_desc:chararray,status_code:chararray,status_desc:chararray,crime_code1:chararray,crime_code2:chararray,crime_code3:chararray,crime_code4:chararray,address:chararray,cross_street:chararray,location:chararray);
+
+b = FOREACH a GENERATE dr_number AS dr_number, SUBSTRING(crimes_date,6,10) AS date;
+c = GROUP b by date;
+d = FOREACH c GENERATE group as date,COUNT_STAR(b.dr_number);
+dump d;
+
+-- which year has the most and least arrests activity;
+
+arrests = LOAD '/user/actejas/arrests.csv' USING PigStorage(',') AS (report_id:chararray,arrests_date:chararray,arrests_time:chararray,area_id:chararray,area_name:chararray,reporting_dist:chararray,age:chararray,sex:chararray,descent_code:chararray,charge_group_code:chararray,charge_group_desc:chararray,arrest_type:chararray,charge:chararray,charge_decs:chararray,address:chararray,cross_street:chararray,location:chararray);
+
+a = STREAM arrests THROUGH `tail -n +2` AS (report_id:chararray,arrests_date:chararray,arrests_time:chararray,area_id:chararray,area_name:chararray,reporting_dist:chararray,age:chararray,sex:chararray,descent_code:chararray,charge_group_code:chararray,charge_group_desc:chararray,arrest_type:chararray,charge:chararray,charge_decs:chararray,address:chararray,cross_street:chararray,location:chararray);
+
+b = FOREACH a GENERATE report_id AS report_id, SUBSTRING(arrests_date,6,10) AS date;
+c = GROUP b by date;
+d = FOREACH c GENERATE group as date,COUNT_STAR(b.report_id);
+dump d;
+
+--5> which year has the most and least stops activity;
+
+stops = LOAD '/user/actejas/stops.csv' USING PigStorage(',') AS (stop_number:chararray,ref_number:chararray,sex:chararray,descent:chararray,descent_desc:chararray,stop_date:chararray,stop_time:chararray,off1_number:chararray,off1_divnum:chararray,div1_desc:chararray,off2_number:chararray,off2_divnum:chararray,div2_desc:chararray,report_dist:chararray,stop_type:chararray,post_stop_activity:chararray);
+
+a = STREAM stops THROUGH `tail -n +2` AS (stop_number:chararray,ref_number:chararray,sex:chararray,descent:chararray,descent_desc:chararray,stop_date:chararray,stop_time:chararray,off1_number:chararray,off1_divnum:chararray,div1_desc:chararray,off2_number:chararray,off2_divnum:chararray,div2_desc:chararray,report_dist:chararray,stop_type:chararray,post_stop_activity:chararray);
+
+
+b = FOREACH a GENERATE stop_number AS stop_number, SUBSTRING(stop_date,6,10) AS date;
+
+c = GROUP b by date;
+d = FOREACH c GENERATE group as date,COUNT_STAR(b.stop_number);
+dump d;
+
+
+--GROUP crimes by victim descent and show which descents are more frequent victims
+grunt> descent = GROUP crimes BY ‘victim_descent’;
+grunt> descent_count = FOREACH descent GENERATE COUNT(crimes BY ‘victim descent’);
+grunt> DUMP descent_count;
+
+--LOAD projects/demo
+grunt> demo = LOAD ‘demo’ USING PigStorage(',') AS (fiscal year: int, unemployment rate:int);
+grunt> DESCRIBE demo;
+grunt> unemployment= GROUP demo ALL;
+grunt> DUMP unemployment;
+
+--GROUP crimes by date occurred and how which years have most crime. Then show if increased years of unemployment like in 2008 correlates to increased crime
+grunt> date = GROUP crimes BY date occurred;
+grunt> date_year = FOREACH date GENERATE GetYear AS ‘year’;
+grunt> DUMP date_year;
+grunt> date_count = FOREACH date_year GENERATE COUNT(‘year’);
+grunt> DUMP date_count;
+
+		 	 	 		
+			
+--Nesting function example						
+top_salaries = FOREACH title_group {
+   sorted = ORDER employees BY salary DESC;
+   highest_paid = LIMIT sorted 3;
+   GENERATE group, highest_paid;
+
+--Reporting District Legend
+https://www.arcgis.com/home/item.html?id=c4f83909b81d4786aa8ba8a74a4b4db1#data
+
+--Map
+http://geohub.lacity.org/datasets/c4f83909b81d4786aa8ba8a74a4b4db1_4?uiTab=table&geometry=-119.993%2C33.679%2C-117.702%2C34.362 					
+				
+			
+		
+--LAPD ACTIVITY AND GEO-SPATIAL ANALYSIS
+
+Which reporting district is most and least affected by LAPD stops
+a = GROUP stops by report_dist;
+b = FOREACH a GENERATE FLATTEN(group) as (report_dist), COUNT($1);
+c = ORDER b BY $1 DESC;
+d = LIMIT C 5;
+
+Need to relate stops crimes and arrests using Report Districts to fetch the number of LAPD activity in each Area(Geo-Spatial Insight).
+
+--Link for zipcodes of EACH Reporting DIstrict
+--http://www.lapdonline.org/our_communities/content_basic_view/6279
+
+
+-- Which reporting district is most and least affected by LAPD crimes
+-- Which reporting district is most and least affected by LAPD arrests
+
+which year has the most and least stops activity;
+stops = LOAD '/user/actejas/stops.csv' USING PigStorage(',') AS (stop_number:chararray,ref_number:chararray,sex:chararray,descent:chararray,descent_desc:chararray,stop_date:chararray,stop_time:chararray,off1_number:chararray,off1_divnum:chararray,div1_desc:chararray,off2_number:chararray,off2_divnum:chararray,div2_desc:chararray,report_dist:chararray,stop_type:chararray,post_stop_activity:chararray);
+
+a = STREAM stops THROUGH `tail -n +2` AS (stop_number:chararray,ref_number:chararray,sex:chararray,descent:chararray,descent_desc:chararray,stop_date:chararray,stop_time:chararray,off1_number:chararray,off1_divnum:chararray,div1_desc:chararray,off2_number:chararray,off2_divnum:chararray,div2_desc:chararray,report_dist:chararray,stop_type:chararray,post_stop_activity:chararray);
+
+b = FOREACH a GENERATE stop_number AS stop_number, SUBSTRING(stop_date,6,10) AS date;
+c = GROUP b by date;
+d = FOREACH c GENERATE group as date,COUNT_STAR(b.stop_number);
+dump d;
+
+which year has the most and least crime activity;
+crimes = LOAD '/user/actejas/crimes.csv' USING PigStorage(',') AS (dr_number:chararray,crimes_date_reported:chararray,crimes_date:chararray,crimes_time:chararray,area_id:chararray,area_name:chararray,reporting_disct:chararray,crime_code:chararray,crime_code_desc:chararray,mo_code:chararray,victim_age:chararray,victim_sex:chararray,victim_descent:chararray,premise_code:chararray,premise_desc:chararray,weapon_code:chararray,weapon_desc:chararray,status_code:chararray,status_desc:chararray,crime_code1:chararray,crime_code2:chararray,crime_code3:chararray,crime_code4:chararray,address:chararray,cross_street:chararray,location:chararray);
+
+a = STREAM crimes THROUGH `tail -n +2` AS (dr_number:chararray,crimes_date_reported:chararray,crimes_date:chararray,crimes_time:chararray,area_id:chararray,area_name:chararray,reporting_disct:chararray,crime_code:chararray,crime_code_desc:chararray,mo_code:chararray,victim_age:chararray,victim_sex:chararray,victim_descent:chararray,premise_code:chararray,premise_desc:chararray,weapon_code:chararray,weapon_desc:chararray,status_code:chararray,status_desc:chararray,crime_code1:chararray,crime_code2:chararray,crime_code3:chararray,crime_code4:chararray,address:chararray,cross_street:chararray,location:chararray);
+
+b = FOREACH a GENERATE dr_number AS dr_number, SUBSTRING(crimes_date,6,10) AS date;
+c = GROUP b by date;
+d = FOREACH c GENERATE group as date,COUNT_STAR(b.dr_number);
+dump d;
+
+which year has the most and least arrests activity;
+arrests = LOAD '/user/actejas/arrests.csv' USING PigStorage(',') AS (report_id:chararray,arrests_date:chararray,arrests_time:chararray,area_id:chararray,area_name:chararray,reporting_dist:chararray,age:chararray,sex:chararray,descent_code:chararray,charge_group_code:chararray,charge_group_desc:chararray,arrest_type:chararray,charge:chararray,charge_desc:chararray,address:chararray,cross_street:chararray,location:chararray);
+
+a = STREAM arrests THROUGH `tail -n +2` AS (report_id:chararray,arrests_date:chararray,arrests_time:chararray,area_id:chararray,area_name:chararray,reporting_dist:chararray,age:chararray,sex:chararray,descent_code:chararray,charge_group_code:chararray,charge_group_desc:chararray,arrest_type:chararray,charge:chararray,charge_desc:chararray,address:chararray,cross_street:chararray,location:chararray);
+
+b = FOREACH a GENERATE report_id AS report_id, SUBSTRING(arrests_date,6,10) AS date;
+c = GROUP b by date;
+d = FOREACH c GENERATE group as date,COUNT_STAR(b.report_id);
+dump d;
+
+--> Which month has the most and least stops activity
+stops = LOAD '/user/actejas/stops.csv' USING PigStorage(',') AS (stop_number:chararray,ref_number:chararray,sex:chararray,descent:chararray,descent_desc:chararray,stop_date:chararray,stop_time:chararray,off1_number:chararray,off1_divnum:chararray,div1_desc:chararray,off2_number:chararray,off2_divnum:chararray,div2_desc:chararray,report_dist:chararray,stop_type:chararray,post_stop_activity:chararray);
+
+a = STREAM stops THROUGH `tail -n +2` AS (stop_number:chararray,ref_number:chararray,sex:chararray,descent:chararray,descent_desc:chararray,stop_date:chararray,stop_time:chararray,off1_number:chararray,off1_divnum:chararray,div1_desc:chararray,off2_number:chararray,off2_divnum:chararray,div2_desc:chararray,report_dist:chararray,stop_type:chararray,post_stop_activity:chararray);
+
+b = FOREACH a GENERATE stop_number AS stop_number, SUBSTRING(stop_date,0,2) AS date;
+c = GROUP b by date;
+d = FOREACH c GENERATE group as date,COUNT_STAR(b.stop_number);
+dump d;
+
+-- Which month has the most and least crimes activity
+crimes = LOAD '/user/actejas/crimes.csv' USING PigStorage(',') AS (dr_number:chararray,crimes_date_reported:chararray,crimes_date:chararray,crimes_time:chararray,area_id:chararray,area_name:chararray,reporting_disct:chararray,crime_code:chararray,crime_code_desc:chararray,mo_code:chararray,victim_age:chararray,victim_sex:chararray,victim_descent:chararray,premise_code:chararray,premise_desc:chararray,weapon_code:chararray,weapon_desc:chararray,status_code:chararray,status_desc:chararray,crime_code1:chararray,crime_code2:chararray,crime_code3:chararray,crime_code4:chararray,address:chararray,cross_street:chararray,location:chararray);
+
+a = STREAM crimes THROUGH `tail -n +2` AS (dr_number:chararray,crimes_date_reported:chararray,crimes_date:chararray,crimes_time:chararray,area_id:chararray,area_name:chararray,reporting_disct:chararray,crime_code:chararray,crime_code_desc:chararray,mo_code:chararray,victim_age:chararray,victim_sex:chararray,victim_descent:chararray,premise_code:chararray,premise_desc:chararray,weapon_code:chararray,weapon_desc:chararray,status_code:chararray,status_desc:chararray,crime_code1:chararray,crime_code2:chararray,crime_code3:chararray,crime_code4:chararray,address:chararray,cross_street:chararray,location:chararray);
+
+b = FOREACH a GENERATE dr_number AS dr_number, SUBSTRING(crimes_date,0,2) AS date;
+c = GROUP b by date;
+d = FOREACH c GENERATE group as date,COUNT_STAR(b.dr_number);
+dump d;
+
+
+-- Which month has the most and least arrests activity
+arrests = LOAD '/user/actejas/arrests.csv' USING PigStorage(',') AS (report_id:chararray,arrests_date:chararray,arrests_time:chararray,area_id:chararray,area_name:chararray,reporting_dist:chararray,age:chararray,sex:chararray,descent_code:chararray,charge_group_code:chararray,charge_group_desc:chararray,arrest_type:chararray,charge:chararray,charge_desc:chararray,address:chararray,cross_street:chararray,location:chararray);
+
+a = STREAM arrests THROUGH `tail -n +2` AS (report_id:chararray,arrests_date:chararray,arrests_time:chararray,area_id:chararray,area_name:chararray,reporting_dist:chararray,age:chararray,sex:chararray,descent_code:chararray,charge_group_code:chararray,charge_group_desc:chararray,arrest_type:chararray,charge:chararray,charge_desc:chararray,address:chararray,cross_street:chararray,location:chararray);
+
+b = FOREACH a GENERATE report_id AS report_id, SUBSTRING(arrests_date,0,2) AS date;
+c = GROUP b by date;
+d = FOREACH c GENERATE group as date,COUNT_STAR(b.report_id);
+dump d;
+
+--Find the % relation of crimes that led or did not lead to arrests
+
+LAPD ACTIVITY AND DEMOGRAPHIC/ECONOMIC ANALYSIS
+
+which victim profile is most and least affected by stops;
+a = GROUP stops by (descent);
+b = FOREACH a GENERATE FLATTEN(group) as (descent), COUNT($1);
+dump b;
+
+-- which victim profile is most and least affected by crimes
+a = GROUP crimes by (victim_descent);
+b = FOREACH a GENERATE FLATTEN(group) as (victim_descent), COUNT($1);
+dump b;
+
+a = GROUP crimes by (victim_age);
+b = FOREACH a GENERATE FLATTEN(group) as (victim_age), COUNT($1);
+dump b;
+
+-- which victim profile is most and least affected by arrests
+a = GROUP arrests by (descent_code);
+b = FOREACH a GENERATE FLATTEN(group) as (descent_code), COUNT($1);
+dump b;
+
+-- which age is most and least affected by crimes
+a = GROUP crimes by (descent_code);
+b = FOREACH a GENERATE FLATTEN(group) as (descent_code), COUNT($1);
+dump b;
+
+
+  
+--Crime years correlate to unemployment rates
+demo = LOAD '/user/actejas/demo.csv' USING PigStorage(',') AS (fiscal_year:chararray,estimated_population:chararray,income_in_thousands:chararray,income_per_capita:chararray,median_age:chararray,public_school_enrollment:chararray,unemployment_rate:chararray);
+
+a = STREAM demo THROUGH `tail -n +2` AS (fiscal_year:chararray,estimated_population:chararray,income_in_thousands:chararray,income_per_capita:chararray,median_age:chararray,public_school_enrollment:chararray,unemployment_rate:chararray);
+
+b = FOREACH a GENERATE fiscal_year AS fiscal_year,unemployment_rate AS unemployment_rate; 
+c = GROUP b by fiscal_year;
+d = FOREACH c GENERATE group as fiscal_year,b.unemployment_rate;
+dump d;
+
+-- Crime years correlate to public school enrollment
+demo = LOAD '/user/actejas/demo.csv' USING PigStorage(',') AS (fiscal_year:chararray,estimated_population:chararray,income_in_thousands:chararray,income_per_capita:chararray,median_age:chararray,public_school_enrollment:chararray,unemployment_rate:chararray);
+
+a = STREAM demo THROUGH `tail -n +2` AS (fiscal_year:chararray,estimated_population:chararray,income_in_thousands:chararray,income_per_capita:chararray,median_age:chararray,public_school_enrollment:chararray,unemployment_rate:chararray);
+b = FOREACH a GENERATE fiscal_year AS fiscal_year,public_school_enrollment AS public_school_enrollment; 
+c = GROUP b by fiscal_year;
+d = FOREACH c GENERATE group as fiscal_year,b.public_school_enrollment;
+dump d;
+
+-- Crime years correlate to personal income per capita
+demo = LOAD '/user/actejas/demo.csv' USING PigStorage(',') AS (fiscal_year:chararray,estimated_population:chararray,income_in_thousands:chararray,income_per_capita:chararray,median_age:chararray,public_school_enrollment:chararray,unemployment_rate:chararray);
+
+a = STREAM demo THROUGH `tail -n +2` AS (fiscal_year:chararray,estimated_population:chararray,income_in_thousands:chararray,income_per_capita:chararray,median_age:chararray,public_school_enrollment:chararray,unemployment_rate:chararray);
+b = FOREACH a GENERATE fiscal_year AS fiscal_year,income_per_capita AS income_per_capita; 
+c = GROUP b by fiscal_year;
+d = FOREACH c GENERATE group as fiscal_year,b.income_per_capita;
+dump d; 
+
+-- Total number of Crimes and arrests per year.
+
+crimes = LOAD '/user/actejas/crimes.csv' USING PigStorage(',') AS (dr_number:chararray,crimes_date_reported:chararray,crimes_date:chararray,crimes_time:chararray,area_id:chararray,area_name:chararray,reporting_disct:chararray,crime_code:chararray,crime_code_desc:chararray,mo_code:chararray,victim_age:chararray,victim_sex:chararray,victim_descent:chararray,premise_code:chararray,premise_desc:chararray,weapon_code:chararray,weapon_desc:chararray,status_code:chararray,status_desc:chararray,crime_code1:chararray,crime_code2:chararray,crime_code3:chararray,crime_code4:chararray,address:chararray,cross_street:chararray,location:chararray);
+
+
+a = STREAM crimes THROUGH `tail -n +2` AS (dr_number:chararray,crimes_date_reported:chararray,crimes_date:chararray,crimes_time:chararray,area_id:chararray,area_name:chararray,reporting_disct:chararray,crime_code:chararray,crime_code_desc:chararray,mo_code:chararray,victim_age:chararray,victim_sex:chararray,victim_descent:chararray,premise_code:chararray,premise_desc:chararray,weapon_code:chararray,weapon_desc:chararray,status_code:chararray,status_desc:chararray,crime_code1:chararray,crime_code2:chararray,crime_code3:chararray,crime_code4:chararray,address:chararray,cross_street:chararray,location:chararray);
+
+b = FOREACH a GENERATE dr_number AS Drnumber , SUBSTRING(crimes_date,6,10) AS crime_date;
+c = GROUP b by crime_date;
+d = FOREACH c GENERATE group as crime_date, COUNT_STAR(b.Drnumber);
+dump d;
+
+arrests = LOAD '/user/actejas/arrests.csv' USING PigStorage(',') AS (report_id:chararray,arrests_date:chararray,arrests_time:chararray,area_id:chararray,area_name:chararray,reporting_dist:chararray,age:chararray,sex:chararray,descent_code:chararray,charge_group_code:chararray,charge_group_desc:chararray,arrest_type:chararray,charge:chararray,charge_decs:chararray,address:chararray,cross_street:chararray,location:chararray);
+
+a = STREAM arrests THROUGH `tail -n +2` AS (report_id:chararray,arrests_date:chararray,arrests_time:chararray,area_id:chararray,area_name:chararray,reporting_dist:chararray,age:chararray,sex:chararray,descent_code:chararray,charge_group_code:chararray,charge_group_desc:chararray,arrest_type:chararray,charge:chararray,charge_decs:chararray,address:chararray,cross_street:chararray,location:chararray);
+
+b = FOREACH a GENERATE report_id AS reportid , SUBSTRING(arrests_date,6,10) AS arrests_date;
+c = GROUP b by arrests_date;
+d = FOREACH c GENERATE group as arrests_date, COUNT_STAR(b.reportid);
+dump d;
+
+
+--Which LAPD Reporting District Has the Most Reports of LAPD Activity
+
+crimes = LOAD '/user/actejas/crimes.csv' USING PigStorage(',') AS (dr_number:chararray,crimes_date_reported:chararray,crimes_date:chararray,crimes_time:chararray,area_id:chararray,area_name:chararray,reporting_dist:chararray,crime_code:chararray,crime_code_desc:chararray,mo_code:chararray,victim_age:chararray,victim_sex:chararray,victim_descent:chararray,premise_code:chararray,premise_desc:chararray,weapon_code:chararray,weapon_desc:chararray,status_code:chararray,status_desc:chararray,crime_code1:chararray,crime_code2:chararray,crime_code3:chararray,crime_code4:chararray,address:chararray,cross_street:chararray,location:chararray);
+
+arrests = LOAD '/user/actejas/arrests.csv' USING PigStorage(',') AS (report_id:chararray,arrests_date:chararray,arrests_time:chararray,area_id:chararray,area_name:chararray,reporting_dist:chararray,age:chararray,sex:chararray,descent_code:chararray,charge_group_code:chararray,charge_group_desc:chararray,arrest_type:chararray,charge:chararray,charge_decs:chararray,address:chararray,cross_street:chararray,location:chararray);
+
+stops = LOAD '/user/actejas/stops.csv' USING PigStorage(',') AS (stop_number:chararray,ref_number:chararray,sex:chararray,descent:chararray,descent_desc:chararray,stop_date:chararray,stop_time:chararray,off1_number:chararray,off1_divnum:chararray,div1_desc:chararray,off2_number:chararray,off2_divnum:chararray,div2_desc:chararray,report_dist:chararray,stop_type:chararray,post_stop_activity:chararray);
+
+
+
+zipcode = LOAD '/user/actejas/zipcode.csv' USING PigStorage(',') AS (reporting_dist:chararray,area_name:chararray,zip_code:chararray);
+
+
+
+a = JOIN arrests by reporting_dist,zipcodes by reporting_dist;
+b = FOREACH a GENERATE arrests::reporting_dist AS reporting_dist , arrests::arrests_date AS arrests_date, zipcode::zip_code AS zipcode;
+dump b;
+
+STORE b INTO 'OUTPUT/ARRESTDATAFORMAP';
+a = JOIN crimes by reporting_dist,zipcode by reporting_dist;
+b = FOREACH a GENERATE crimes::reporting_dist AS reporting_dist , crime::crimes_date AS crimes_date, zipcode::zip_code AS zipcode;
+dump b;
+
+STORE b INTO 'OUTPUT/CRIMESDATAFORMAP';
+a = JOIN stops by reporting_dist,zipcode by reporting_dist;
+b = FOREACH a GENERATE stops::report_dist AS reporting_dist , stops::stop_date AS crimes_date, zipcode::zip_code AS zipcode;
+dump b;
+
+STORE b INTO 'OUTPUT/STOPSFORMAP';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
